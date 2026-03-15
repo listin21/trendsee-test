@@ -4,23 +4,40 @@
 
 ## Запуск
 
-Из корня проекта:
+1) Создать файл `.env` в корне проекта (можно взять значения из `.env.example`):
+
+```env
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=change-me
+POSTGRES_DB=trendsee
+REDIS_PASSWORD=change-me-redis
+JWT_SECRET=change-me-jwt-secret
+```
+
+2) Запустить сервисы:
 
 ```bash
 docker-compose up --build
 ```
 
-После запуска:
+3) После запуска:
 - Frontend: `http://localhost:5173`
 - Backend API: `http://localhost:8000`
 - Swagger: `http://localhost:8000/docs`
 
-Если БД пустая, заполнить тестовыми данными:
+4) Если БД пустая, заполнить тестовыми данными:
 
 ```bash
 docker-compose exec backend python init_db.py
 docker-compose exec backend python seed_data.py
 ```
+
+## Важные примечания по инфраструктуре
+
+- `POSTGRES_PASSWORD` и `JWT_SECRET` обязательны для запуска `docker-compose`.
+- Redis запускается с паролем (`REDIS_PASSWORD`), backend подключается к Redis по защищенному URL.
+- Frontend-контейнер запускается от non-root пользователя.
+- Frontend зависит от `backend` с условием `service_healthy`.
 
 ## Что реализовано
 
