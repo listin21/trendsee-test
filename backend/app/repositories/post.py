@@ -21,11 +21,18 @@ class PostRepository:
 
     async def update(self, post_id: int, title: Optional[str], text: Optional[str]) -> Optional[Post]:
         post = await self.get_by_id(post_id)
-        if post:
-            if title is not None:
-                post.title = title
-            if text is not None:
-                post.text = text
+        if not post:
+            return None
+
+        changed = False
+        if title is not None:
+            post.title = title
+            changed = True
+        if text is not None:
+            post.text = text
+            changed = True
+
+        if changed:
             await self.db.commit()
             await self.db.refresh(post)
         return post
@@ -39,6 +46,8 @@ class PostRepository:
         return False
 
     async def get_by_user(self, user_id: int, limit: int = 10, offset: int = 0) -> List[Post]:
+        limit = max(1, min(limit, 100))
+        offset = max(0, offset)
         result = await self.db.execute(
             select(Post)
             .where(Post.user_id == user_id)
@@ -46,13 +55,15 @@ class PostRepository:
             .limit(limit)
             .offset(offset)
         )
-        return list(result.scalars().all())
+        return result.scalars().all()
 
     async def get_all(self, limit: int = 10, offset: int = 0) -> List[Post]:
+        limit = max(1, min(limit, 100))
+        offset = max(0, offset)
         result = await self.db.execute(
             select(Post)
             .order_by(desc(Post.created_at))
             .limit(limit)
             .offset(offset)
         )
-        return list(result.scalars().all())
+        return result.scalars().all()

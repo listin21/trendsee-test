@@ -11,8 +11,7 @@ class UserRepository:
     async def create(self, name: str) -> User:
         user = User(name=name)
         self.db.add(user)
-        await self.db.commit()
-        await self.db.refresh(user)
+        await self.db.flush()
         return user
 
     async def get_by_id(self, user_id: int) -> Optional[User]:
@@ -23,14 +22,13 @@ class UserRepository:
         user = await self.get_by_id(user_id)
         if user:
             user.name = name
-            await self.db.commit()
-            await self.db.refresh(user)
+            await self.db.flush()
         return user
 
     async def delete(self, user_id: int) -> bool:
         user = await self.get_by_id(user_id)
         if user:
             await self.db.delete(user)
-            await self.db.commit()
+            await self.db.flush()
             return True
         return False

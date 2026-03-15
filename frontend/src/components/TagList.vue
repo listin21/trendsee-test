@@ -9,11 +9,16 @@
   </div>
 </template>
 
-<script setup>
-defineProps({
-  tags: { type: Array, required: true }
-  // each: { label: String, bg: String, color: String }
-})
+<script setup lang="ts">
+interface Tag {
+  label: string
+  bg: string
+  color: string
+}
+
+defineProps<{
+  tags: Tag[]
+}>()
 </script>
 
 <style scoped>

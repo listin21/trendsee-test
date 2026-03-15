@@ -1,7 +1,8 @@
 import asyncio
 from app.db.postgres import engine, Base
-from app.models.user import User
-from app.models.post import Post
+# Import models to register them with Base.metadata for create_all()/drop_all().
+from app.models.user import User  # noqa: F401
+from app.models.post import Post  # noqa: F401
 
 
 async def init_db():

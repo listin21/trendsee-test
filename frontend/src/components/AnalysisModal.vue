@@ -6,10 +6,28 @@
         <!-- LEFT COLUMN -->
         <div class="col-left">
           <div class="preview-card">
-            <div class="preview-thumb">
-              <img :src="thumbUrl" :alt="post.title || 'video'" />
+            <div class="preview-thumb" :style="thumbBg">
+              <img
+                v-if="!imgError"
+                :src="thumbUrl"
+                :alt="post.title || 'video'"
+                loading="eager"
+                @error="imgError = true"
+              />
               <div class="preview-overlay">
-                <span class="reels-badge">Reels</span>
+                <div class="top-badges">
+                  <span class="reels-badge">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" stroke-width="2"/><path d="M3 9h18" stroke="currentColor" stroke-width="2"/><path d="M8 3l3 6M14 3l3 6" stroke="currentColor" stroke-width="2"/></svg>
+                    Reels
+                  </span>
+                  <span class="x10-badge">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M12 2C9 6 6.5 8.5 6.5 12A5.5 5.5 0 0 0 17.5 12C17.5 8.5 15 6 12 2z" fill="currentColor"/></svg>
+                    X10
+                  </span>
+                </div>
+                <button class="play-btn" type="button" aria-label="Play preview">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7-11-7z" fill="#4E616B"/></svg>
+                </button>
                 <div class="overlay-stats">
                   <span class="stat"><svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#fff" stroke-width="2"/><circle cx="12" cy="12" r="3" stroke="#fff" stroke-width="2"/></svg>{{ fmtK(post.views_count) }}</span>
                   <span class="stat"><svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="#fff" stroke-width="2"/></svg>{{ fmtK(post.likes_count) }}</span>
@@ -20,7 +38,10 @@
             </div>
             <div class="preview-info">
               <div class="blogger-row">
-                <img class="avatar" :src="avatarUrl" alt="" />
+                <div class="avatar" :style="avatarStyle">
+                  <img v-if="!avatarError" :src="avatarUrl" alt="" loading="eager" @error="avatarError = true" />
+                  <span v-else>{{ handle[1]?.toUpperCase() }}</span>
+                </div>
                 <div>
                   <div class="username">{{ handle }}</div>
                   <div class="post-date">{{ fmtDate(post.created_at) }}</div>
@@ -32,11 +53,11 @@
 
           <!-- Stats block -->
           <div class="stats-block">
-            <div class="stat-row"><span class="stat-label">Просмотры</span><span class="stat-val">{{ fmtK(post.views_count) }}</span></div>
-            <div class="stat-row"><span class="stat-label">Лайки</span><span class="stat-val">{{ fmtK(post.likes_count) }}</span></div>
-            <div class="stat-row"><span class="stat-label">Комментарии</span><span class="stat-val">{{ fmtK(post.comments_count) }}</span></div>
-            <div class="stat-row"><span class="stat-label">Репосты</span><span class="stat-val">{{ fmtK(post.shares_count) }}</span></div>
-            <div class="stat-row"><span class="stat-label">ER</span><span class="stat-val">{{ er }}%</span></div>
+            <div class="stat-row"><span class="stat-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/></svg>Просмотры</span><span class="stat-val">{{ fmtM(post.views_count) }}</span></div>
+            <div class="stat-row"><span class="stat-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" stroke-width="2"/></svg>Лайки</span><span class="stat-val">{{ fmtM(post.likes_count) }}</span></div>
+            <div class="stat-row"><span class="stat-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2"/></svg>Комментарии</span><span class="stat-val">{{ fmtM(post.comments_count) }}</span></div>
+            <div class="stat-row"><span class="stat-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13" stroke="currentColor" stroke-width="2"/><polygon points="22 2 15 22 11 13 2 9 22 2" fill="none" stroke="currentColor" stroke-width="2"/></svg>Репосты</span><span class="stat-val">{{ fmtM(post.shares_count) }}</span></div>
+            <div class="stat-row"><span class="stat-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2v20M2 12h20" stroke="currentColor" stroke-width="2"/></svg>ER</span><span class="stat-val">{{ er }}%</span></div>
           </div>
         </div>
 
@@ -47,6 +68,25 @@
             <div>
               <p class="topic-label">Тема видео</p>
               <h2 class="topic-title">{{ post.title || post.text }}</h2>
+              <div class="topic-meta">
+                <span class="meta-pill">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h2l2-6 4 12 2-6h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Tyga - Pop it off
+                </span>
+                <span class="meta-lang">
+                  Язык:
+                  <span class="lang-flag-icon" aria-hidden="true">
+                    <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
+                      <rect width="18" height="14" rx="2" fill="#012169"/>
+                      <path d="M0 1.5L6 6.2V0h6v6.2l6-4.7v2.4l-4.9 3.8H18v2.6h-4.9L18 12.1V14l-6-4.7V14H6V9.3L0 14v-1.9l4.9-3.8H0V5.7h4.9L0 1.9V1.5z" fill="#fff"/>
+                      <path d="M0 2.3L4.3 5.7H3l-3-2.4V2.3zm18 0v1l-3 2.4h-1.3L18 2.3zM0 11.7l3-2.4h1.3L0 12.7v-1zM18 11.7v1l-4.3-3.4H15l3 2.4z" fill="#C8102E"/>
+                      <path d="M7.2 0h3.6v5H18v4H10.8v5H7.2V9H0V5h7.2V0z" fill="#fff"/>
+                      <path d="M7.8 0h2.4v5.6H18v2.8h-7.8V14H7.8V8.4H0V5.6h7.8V0z" fill="#C8102E"/>
+                    </svg>
+                  </span>
+                  Английский
+                </span>
+              </div>
             </div>
             <button class="btn-close" @click="$emit('close')" aria-label="Закрыть">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#9898A6" stroke-width="2" stroke-linecap="round"/></svg>
@@ -173,7 +213,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 const props = defineProps({
   show: { type: Boolean, required: true },
@@ -182,6 +222,18 @@ const props = defineProps({
 defineEmits(['close'])
 
 const HANDLES = ['@blogerich', '@digital_mk', '@trendsetter', '@viral_pro', '@content_lab']
+const GRADIENTS = [
+  'linear-gradient(160deg, #667eea 0%, #764ba2 100%)',
+  'linear-gradient(160deg, #f093fb 0%, #f5576c 100%)',
+  'linear-gradient(160deg, #4facfe 0%, #00f2fe 100%)',
+  'linear-gradient(160deg, #43e97b 0%, #38f9d7 100%)',
+  'linear-gradient(160deg, #fa709a 0%, #fee140 100%)',
+  'linear-gradient(160deg, #a18cd1 0%, #fbc2eb 100%)',
+  'linear-gradient(160deg, #fccb90 0%, #d57eeb 100%)',
+  'linear-gradient(160deg, #e0c3fc 0%, #8ec5fc 100%)',
+]
+const imgError = ref(false)
+const avatarError = ref(false)
 const TAG_POOL = [
   { label: 'Туториал',           bg: '#D5D6F8', color: '#2B31B3' },
   { label: 'Энергичное видео',   bg: '#E1F7D8', color: '#1E6D00' },
@@ -195,6 +247,8 @@ const id       = computed(() => props.post.id || 1)
 const thumbUrl = computed(() => `https://picsum.photos/seed/${id.value * 7}/260/200`)
 const avatarUrl = computed(() => `https://picsum.photos/seed/${id.value * 13}/32/32`)
 const handle   = computed(() => HANDLES[id.value % HANDLES.length])
+const thumbBg = computed(() => ({ background: GRADIENTS[id.value % GRADIENTS.length] }))
+const avatarStyle = computed(() => ({ background: GRADIENTS[(id.value * 3 + 2) % GRADIENTS.length] }))
 const er       = computed(() => {
   const v = props.post.views_count || 1
   const eng = (props.post.likes_count || 0) + (props.post.comments_count || 0)
@@ -224,10 +278,21 @@ const funnelItems = [
   { label: 'Лид-магнит', desc: 'Почему сработало: обещание простой пользы снижает порог действия.' },
 ]
 
+watch(id, () => {
+  imgError.value = false
+  avatarError.value = false
+})
+
 function fmtK(n) {
   if (!n) return '0'
   if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M'
   if (n >= 1000) return Math.round(n / 1000) + 'k'
+  return String(n)
+}
+function fmtM(n) {
+  if (!n) return '0'
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1).replace('.', ',')} млн`
+  if (n >= 1000) return `${Math.round(n / 1000)} тыс`
   return String(n)
 }
 function fmtDate(d) {
@@ -254,7 +319,7 @@ function fmtDateTime(d) {
 .modal {
   background: #FFFFFF;
   border-radius: 24px 0 0 24px;
-  width: 920px;
+  width: 1020px;
   height: 100dvh;
   max-height: 100dvh;
   max-width: 100%;
@@ -266,9 +331,9 @@ function fmtDateTime(d) {
 
 /* LEFT */
 .col-left {
-  width: 216px;
-  min-width: 216px;
-  flex: 0 0 216px;
+  width: 258px;
+  min-width: 258px;
+  flex: 0 0 258px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -288,12 +353,14 @@ function fmtDateTime(d) {
 }
 .preview-thumb {
   position: relative;
-  width: 184px;
+  width: 220px;
   height: 340px;
   border-radius: 16px;
   overflow: hidden;
 }
 .preview-thumb img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -309,13 +376,51 @@ function fmtDateTime(d) {
   padding: 12px;
 }
 .reels-badge {
+  background: rgba(0,0,0,0.4);
+  border-radius: 8px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+  align-self: flex-start;
+  line-height: 1.1;
+}
+.top-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.x10-badge {
   align-self: flex-start;
   background: rgba(0,0,0,0.4);
   border-radius: 8px;
-  padding: 4px 8px;
-  font-size: 12px;
+  padding: 3px 8px;
+  font-size: 11px;
   font-weight: 600;
   color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+  line-height: 1.1;
+}
+.play-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .overlay-stats {
   display: flex;
@@ -343,8 +448,20 @@ function fmtDateTime(d) {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  object-fit: cover;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .username {
   font-size: 14px;
@@ -369,7 +486,7 @@ function fmtDateTime(d) {
 }
 
 .stats-block {
-  padding: 0 16px;
+  padding: 0 16px 0 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -383,6 +500,9 @@ function fmtDateTime(d) {
   padding: 8px 12px;
 }
 .stat-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-size: 12px;
   line-height: 14px;
   color: #343A40;
@@ -398,7 +518,7 @@ function fmtDateTime(d) {
 .col-right {
   flex: 1;
   width: auto;
-  padding: 24px 24px 24px 32px;
+  padding: 24px 28px 24px 28px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -428,6 +548,40 @@ function fmtDateTime(d) {
   line-height: 1.18;
   margin: 0;
   max-width: 574px;
+}
+.topic-meta {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #F4F5F6;
+  color: #5B6A73;
+  border-radius: 10px;
+  padding: 4px 8px;
+  font-size: 14px;
+}
+.meta-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #758892;
+  font-size: 14px;
+}
+.lang-flag-icon {
+  width: 18px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  overflow: hidden;
+  flex-shrink: 0;
 }
 .btn-close {
   width: 40px;

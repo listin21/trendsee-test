@@ -1,6 +1,6 @@
 import asyncio
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, List
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,17 +15,32 @@ class PostService:
     def __init__(self, db: AsyncSession):
         self.repository = PostRepository(db)
 
+    async def _invalidate_user_posts_cache(self, user_id: int) -> None:
+        redis = await get_redis()
+        pattern = f"user:{user_id}:posts:*"
+        async for key in redis.scan_iter(match=pattern):
+            await redis.delete(key)
+
     async def create_post(self, user_id: int, title: str, text: str) -> Post:
-        return await self.repository.create(user_id, title, text)
+        post = await self.repository.create(user_id, title, text)
+        await self._invalidate_user_posts_cache(user_id)
+        return post
 
     async def get_post(self, post_id: int) -> Optional[Post]:
         return await self.repository.get_by_id(post_id)
 
     async def update_post(self, post_id: int, title: Optional[str], text: Optional[str]) -> Optional[Post]:
-        return await self.repository.update(post_id, title, text)
+        post = await self.repository.update(post_id, title, text)
+        if post is not None:
+            await self._invalidate_user_posts_cache(post.user_id)
+        return post
 
     async def delete_post(self, post_id: int) -> bool:
-        return await self.repository.delete(post_id)
+        post = await self.repository.get_by_id(post_id)
+        deleted = await self.repository.delete(post_id)
+        if deleted and post is not None:
+            await self._invalidate_user_posts_cache(post.user_id)
+        return deleted
 
     async def get_user_posts(self, user_id: int, limit: int = 10, offset: int = 0) -> List[PostResponse]:
         redis = await get_redis()
@@ -35,7 +50,9 @@ class PostService:
         if cached:
             cached_data = json.loads(cached)
             cache_time = datetime.fromisoformat(cached_data["cached_at"])
-            if datetime.utcnow() - cache_time < timedelta(minutes=10):
+            if cache_time.tzinfo is None:
+                cache_time = cache_time.replace(tzinfo=timezone.utc)
+            if datetime.now(timezone.utc) - cache_time < timedelta(minutes=10):
                 return [PostResponse(**p) for p in cached_data["posts"]]
 
         # Simulated load delay when reading from Postgres (as required by the spec)
@@ -55,11 +72,11 @@ class PostService:
                 }
                 for p in posts
             ],
-            "cached_at": datetime.utcnow().isoformat()
+            "cached_at": datetime.now(timezone.utc).isoformat()
         }
         await redis.setex(cache_key, 600, json.dumps(cache_data))
 
-        return posts
+        return [PostResponse.model_validate(p) for p in posts]
 
     async def get_all_posts(self, limit: int = 10, offset: int = 0) -> List[Post]:
         return await self.repository.get_all(limit, offset)
