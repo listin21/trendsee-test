@@ -83,7 +83,7 @@ export default {
       loading: false,
       hasMore: true,
       page: 1,
-      limit: 20,
+      limit: 8,
       showModal: false,
       selectedPost: null,
       searchQuery: '',
