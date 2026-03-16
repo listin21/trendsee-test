@@ -122,15 +122,21 @@ export default {
       return list
     }
   },
-  mounted() {
-    this.loadPosts()
+  async mounted() {
+    // Load first batch explicitly so sentinel goes below fold before observer starts.
+    await this.loadPosts()
+
+    const scrollRoot = this.$el.closest('.main-content') || null
     this.observer = new IntersectionObserver(
-      entries => { if (entries[0].isIntersecting) this.loadPosts() },
-      { rootMargin: '500px' }
+      entries => {
+        if (entries[0].isIntersecting) this.loadPosts()
+      },
+      // rootMargin 500px on bottom: fire when sentinel is 500px before
+      // reaching the visible bottom edge of the scroll container.
+      { root: scrollRoot, rootMargin: '0px 0px 500px 0px' }
     )
-    this.$nextTick(() => {
-      if (this.$refs.sentinel) this.observer.observe(this.$refs.sentinel)
-    })
+    await this.$nextTick()
+    if (this.$refs.sentinel) this.observer.observe(this.$refs.sentinel)
   },
   beforeUnmount() {
     if (this.observer) this.observer.disconnect()
@@ -198,6 +204,12 @@ export default {
     async loadPosts() {
       if (this.loading || !this.hasMore) return
       this.loading = true
+      // Unobserve before loading so the observer resets its state.
+      // Without this, if sentinel stays within rootMargin while loading,
+      // IntersectionObserver won't re-fire after load completes.
+      if (this.observer && this.$refs.sentinel) {
+        this.observer.unobserve(this.$refs.sentinel)
+      }
       try {
         const newPosts = await getPosts(this.page, this.limit)
         if (!newPosts.length) {
@@ -212,6 +224,11 @@ export default {
         console.error(e)
       } finally {
         this.loading = false
+        // Re-observe after DOM update so intersection is re-evaluated.
+        await this.$nextTick()
+        if (this.observer && this.$refs.sentinel && this.hasMore) {
+          this.observer.observe(this.$refs.sentinel)
+        }
       }
     },
     toggleLike(postId) {
@@ -372,12 +389,12 @@ export default {
 }
 
 .spinner {
-  width: 28px;
-  height: 28px;
-  border: 3px solid rgba(255,255,255,0.1);
+  width: 32px;
+  height: 32px;
+  border: 3px solid #E6E8EA;
   border-top-color: #4F6EF7;
   border-radius: 50%;
-  animation: spin 0.7s linear infinite;
+  animation: spin 0.75s linear infinite;
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }

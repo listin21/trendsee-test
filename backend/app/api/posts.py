@@ -77,6 +77,6 @@ async def delete_post(
     db: AsyncSession = Depends(get_db)
 ):
     service = PostService(db)
-    deleted = await service.delete_post(post_id)
-    if not deleted:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+    # Keep delete idempotent: repeated DELETE on the same resource should
+    # still return 204 and not surface a hard error to clients.
+    await service.delete_post(post_id)
